@@ -1,5 +1,5 @@
 // Para poder acceder a la variable del carrito sin generar conflictos entre archivos
-import { cart } from '../data/cart.js';
+import { cart, addToCart } from '../data/cart.js';
 import { products } from '../data/products.js';
 
 //Creo una variable para combinar todos los strings juntos
@@ -59,40 +59,25 @@ products.forEach((product) => {
   `;
 });
 
-console.log(productsHTML);
-
 //Usamos el DOM para cargar el contenido generado
 document.querySelector('.js-products-grid').innerHTML = productsHTML;
 
-//Agregar productos al carrito
+function updateCartQuantity() {
+  let cartQuantity = 0;
+  //hacemos loop del array del carrito
+  cart.forEach((cartItem) => {
+    cartQuantity += cartItem.quantity;
+  });
+
+  document.querySelector('.js-cart-quantity').innerHTML = cartQuantity;
+}
+
 document.querySelectorAll('.js-add-to-cart').forEach((button) => {
   button.addEventListener('click', () => {
     const productId = button.dataset.productId;
 
-    let matchingItem;
-    //chequeamos que el productId ya este en el carrito
-    cart.forEach((item) => {
-      if (productId === item.productId) {
-        matchingItem = item;
-      }
-    });
-    //si el producto ya esta en el carrito, incrementa la cantidad x1
-    if (matchingItem) {
-      matchingItem.quantity += 1;
-    } else {
-      cart.push({
-        productId: productId,
-        quantity: 1,
-      });
-    }
-
-    let cartQuantity = 0;
-    //hacemos loop del array del carrito
-    cart.forEach((item) => {
-      cartQuantity += item.quantity;
-    });
-
-    document.querySelector('.js-cart-quantity').innerHTML = cartQuantity;
+    addToCart(productId);
+    updateCartQuantity();
   });
 });
 
