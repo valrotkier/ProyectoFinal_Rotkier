@@ -1,5 +1,6 @@
 // Para poder acceder a la variable del carrito sin generar conflictos entre archivos
 import { cart } from '../data/cart.js';
+import { products } from '../data/products.js';
 
 //Creo una variable para combinar todos los strings juntos
 let productsHTML = '';
