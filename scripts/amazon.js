@@ -1,3 +1,6 @@
+// Para poder acceder a la variable del carrito sin generar conflictos entre archivos
+import { cart } from '../data/cart.js';
+
 //Creo una variable para combinar todos los strings juntos
 let productsHTML = '';
 //Creo una variable para que haga loop en el array de los productos
