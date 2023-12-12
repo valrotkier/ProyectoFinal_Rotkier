@@ -1,6 +1,7 @@
 // Para poder acceder a la variable del carrito sin generar conflictos entre archivos
 import { cart, addToCart } from '../data/cart.js';
 import { products } from '../data/products.js';
+import { formatCurrency } from './utils/money.js';
 
 //Creo una variable para combinar todos los strings juntos
 let productsHTML = '';
@@ -26,7 +27,7 @@ products.forEach((product) => {
     </div>
 
     <div class="product-price">
-        $${(product.priceCents / 100).toFixed(2)}
+        $${formatCurrency(product.priceCents)}
     </div>
 
     <div class="product-quantity-container">
