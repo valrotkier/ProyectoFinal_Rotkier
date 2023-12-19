@@ -82,4 +82,6 @@ document.querySelectorAll('.js-add-to-cart').forEach((button) => {
   });
 });
 
+
+
 //Chequear que se combinen las cantidad al carrito
