@@ -101,3 +101,4 @@ document.addEventListener('DOMContentLoaded', () => {
   const cartQuantity = getCartQuantityFromLocalStorage();
   document.querySelector('.js-cart-quantity').innerHTML = cartQuantity;
 });
+
