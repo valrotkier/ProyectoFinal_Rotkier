@@ -82,6 +82,22 @@ document.querySelectorAll('.js-add-to-cart').forEach((button) => {
   });
 });
 
+//Para que el localStorage del carrito me cargue cuando cargo o actualizo la pagina
+function getCartQuantityFromLocalStorage() {
+  const storedCart = JSON.parse(localStorage.getItem('cart'));
+  let cartQuantity = 0;
 
+  if (storedCart) {
+    storedCart.forEach((cartItem) => {
+      cartQuantity += cartItem.quantity;
+    });
+  }
 
-//Chequear que se combinen las cantidad al carrito
+  return cartQuantity;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Actualizo la cart quantity cuando la  pagina es cargada
+  const cartQuantity = getCartQuantityFromLocalStorage();
+  document.querySelector('.js-cart-quantity').innerHTML = cartQuantity;
+});
