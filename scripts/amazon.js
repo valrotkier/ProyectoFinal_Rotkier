@@ -1,25 +1,26 @@
-// Para poder acceder a la variable del carrito sin generar conflictos entre archivos
-import { cart, addToCart } from '../data/cart.js';
-import { products } from '../data/products.js';
+// Uso modulos con import y export para poder acceder a la variable del carrito sin generar conflictos entre archivos
+import { cart, addToCart, saveToStorage } from '../data/cart.js';
+import { fetchProducts, products } from '../data/products.js';
 import { formatCurrency } from './utils/money.js';
 
-//Creo una variable para combinar todos los strings juntos
 let productsHTML = '';
-//Creo una variable para que haga loop en el array de los productos
-products.forEach((product) => {
-  productsHTML += `
+
+fetchProducts().then(() => {
+  //Creo una variable para que haga loop en el array de los productos
+  products.map((product) => {
+    productsHTML += `
   <div class="product-container">
     <div class="product-image-container">
         <img class="product-image" src="${product.image}">
     </div>
 
     <div class="product-name limit-text-to-2-lines">
-        ${product.name}
+        ${product.title}
     </div>
 
     <div class="product-rating-container">
         <img class="product-rating-stars" src="images/ratings/rating-${
-          product.rating.stars * 10
+          Math.round(product.rating.rate) * 10
         }.png">
         <div class="product-rating-count link-primary">
         ${product.rating.count}
@@ -27,7 +28,7 @@ products.forEach((product) => {
     </div>
 
     <div class="product-price">
-        $${formatCurrency(product.priceCents)}
+        $${product.price}
     </div>
 
     <div class="product-quantity-container">
@@ -52,53 +53,81 @@ products.forEach((product) => {
         Added
     </div>
 
-    <button class="add-to-cart-button button-primary js-add-to-cart"
-    data-product-id="${product.id}">
-        Add to Cart
-    </button>
+    <button class="add-to-cart-button button-primary js-add-to-cart" data-product-id="${
+      product.id
+    }">
+    Add to Cart
+  </button>
 </div>
   `;
-});
-
-//Usamos el DOM para cargar el contenido generado
-document.querySelector('.js-products-grid').innerHTML = productsHTML;
-
-function updateCartQuantity() {
-  let cartQuantity = 0;
-  //hacemos loop del array del carrito
-  cart.forEach((cartItem) => {
-    cartQuantity += cartItem.quantity;
   });
+  //Usamos el DOM para cargar el contenido generado
+  document.querySelector('.js-products-grid').innerHTML = productsHTML;
 
-  document.querySelector('.js-cart-quantity').innerHTML = cartQuantity;
-}
-
-document.querySelectorAll('.js-add-to-cart').forEach((button) => {
-  button.addEventListener('click', () => {
-    const productId = button.dataset.productId;
-
-    addToCart(productId);
-    updateCartQuantity();
-  });
-});
-
-//Para que el localStorage del carrito me cargue cuando cargo o actualizo la pagina
-function getCartQuantityFromLocalStorage() {
-  const storedCart = JSON.parse(localStorage.getItem('cart'));
-  let cartQuantity = 0;
-
-  if (storedCart) {
-    storedCart.forEach((cartItem) => {
-      cartQuantity += cartItem.quantity;
-    });
+  function initializeCartQuantityDisplay() {
+    let cartQuantity = 0;
+    if (cart && Array.isArray(cart)) {
+      cartQuantity = cart.reduce(
+        (total, item) => total + (item.quantity || 0),
+        0
+      );
+    }
+    document.querySelector('.js-cart-quantity').textContent = cartQuantity;
   }
 
-  return cartQuantity;
-}
+  initializeCartQuantityDisplay();
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Actualizo la cart quantity cuando la  pagina es cargada
-  const cartQuantity = getCartQuantityFromLocalStorage();
-  document.querySelector('.js-cart-quantity').innerHTML = cartQuantity;
+  document
+    .querySelectorAll('.product-quantity-container select')
+    .forEach((selectElement) => {
+      selectElement.addEventListener('change', (event) => {
+        const productId = event.target
+          .closest('.product-container')
+          .getAttribute('data-product-id');
+        if (!productId) {
+          console.error('Product ID is missing or null', productId);
+          return; // Previene que se actualice la cantidad para un product ID invalido
+        }
+        const selectedQuantity = parseInt(event.target.value, 10);
+
+        updateCartQuantity(productId, selectedQuantity);
+      });
+    });
+
+  function updateCartQuantity(productId, quantity) {
+    const numericProductId = parseInt(productId, 10);
+
+    let cartItem = cart.find((item) => item.productId === numericProductId);
+
+    if (cartItem) {
+      cartItem.quantity = quantity;
+    } else {
+      cart.push({
+        productId: numericProductId,
+        quantity,
+        deliveryOptionId: '1',
+      });
+    }
+
+    saveToStorage(); // Actualiza el carrito en localStorage
+    initializeCartQuantityDisplay(); // Actualiza y muestra la cantidad del carrito
+  }
+
+  document.querySelectorAll('.js-add-to-cart').forEach((button) => {
+    button.addEventListener('click', () => {
+      const productId = button.dataset.productId;
+      if (!productId) {
+        console.error('Product ID is missing or null', productId);
+        return; // Previene que se agregue productos con un productId invalido
+      }
+      const productContainer = button.closest('.product-container');
+      const quantitySelect = productContainer.querySelector(
+        '.product-quantity-container select'
+      );
+      const quantity = parseInt(quantitySelect.value, 10);
+
+      addToCart(productId, quantity);
+      initializeCartQuantityDisplay(); // Actualiza y muestra la cantidad del carrito
+    });
+  });
 });
-
