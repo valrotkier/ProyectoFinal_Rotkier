@@ -4,16 +4,16 @@ import { formatCurrency } from './utils/money.js';
 import dayjs from 'https://unpkg.com/dayjs@1.11.10/esm/index.js';
 import { deliveryOptions } from '../data/deliveryOptions.js';
 
-// Fetch de los productos si todavia no fueron cargados
+// Funcion que asegura que los productos esten cargados antes de renderizar el resumen del pedido
 async function ensureProductsLoaded() {
   if (products.length === 0) {
     await fetchProducts();
   }
 }
 
-// Funcion para que se muestre la seccion de order summary
+// Funcion para que se renderice la seccion de order summary
 async function renderOrderSummary() {
-  await ensureProductsLoaded();
+  await ensureProductsLoaded(); // Asegura que los productos esten cargados
   let cartSummaryHTML = '';
   let totalItemPrice = 0;
   let shippingAndHandling = 0;
@@ -24,6 +24,7 @@ async function renderOrderSummary() {
     if (!product) {
       return; // Saltea la iteracion si el producto no se encuentra
     }
+    // Calcula el precio total de los productos en el carrito
     const itemPrice = parseFloat(product.price);
     const itemQuantity = parseInt(cartItem.quantity, 10);
 
@@ -35,6 +36,7 @@ async function renderOrderSummary() {
       );
     }
 
+    // Calcula el costo de envio y la fecha estimada de entrega
     const deliveryOption = deliveryOptions.find(
       (option) => option.id === cartItem.deliveryOptionId
     );
@@ -45,6 +47,7 @@ async function renderOrderSummary() {
       .add(deliveryOption.deliveryDays, 'days')
       .format('dddd, MMMM D');
 
+    // Construye el HTML para cada elemento del carrito
     cartSummaryHTML += `
       <div class="cart-item-container js-cart-item-container-${product.id}">
         <div class="delivery-date">
@@ -86,10 +89,12 @@ async function renderOrderSummary() {
     `;
   });
 
+  // Calcula totales antes de impuestos, impuestos y total general
   let totalBeforeTax = totalItemPrice + shippingAndHandling;
   let estimatedTax = totalBeforeTax * taxRate;
   let orderTotal = totalBeforeTax + estimatedTax;
 
+  // Actualiza el DOM con el resumen del pedido
   document.querySelector('.js-order-summary').innerHTML = cartSummaryHTML;
   updateOrderSummaryDisplay(
     totalItemPrice,
@@ -98,11 +103,13 @@ async function renderOrderSummary() {
     estimatedTax,
     orderTotal
   );
-  attachEventListeners();
-  updateCheckoutHeader();
+  attachEventListeners(); // Adjunta los eventListeners a los elementos del DOM
+  updateCheckoutHeader(); // Actualiza la parte superior del checkout
 }
 
+// Actualiza la visualización del resumen del pedido en el DOM
 function updateOrderSummaryDisplay(itemPrice, shipping, subtotal, tax, total) {
+  // Funcion interna para actualizar el contenido de un elemento del DOM
   const updateTextContent = (selector, value) => {
     const element = document.querySelector(selector);
     if (element) {
@@ -112,6 +119,7 @@ function updateOrderSummaryDisplay(itemPrice, shipping, subtotal, tax, total) {
     }
   };
 
+  // Actualiza cada sección del resumen del pedido
   updateTextContent('.items-cost', itemPrice);
   updateTextContent('.shipping-cost ', shipping);
   updateTextContent('.subtotal-cost', subtotal);
@@ -119,9 +127,8 @@ function updateOrderSummaryDisplay(itemPrice, shipping, subtotal, tax, total) {
   updateTextContent('.total-cost', total);
 }
 
-//loop entre deliveryOptions
-//Para cada opcion generamos HTML
-//Combinamos el HTML todo junto
+// Genera el HTML para las opciones de entrega de un producto en el carrito
+// Hace loop entre deliveryOptions, luego para cada opcion generamos HTML, por ultimo combinamos el HTML todo junto
 function deliveryOptionsHTML(product, cartItem) {
   let html = '';
   deliveryOptions.forEach((deliveryOption) => {
@@ -159,8 +166,9 @@ function deliveryOptionsHTML(product, cartItem) {
   return html;
 }
 
-// Funcion para unir los event listerenrs a los elementos creados dinamicamente
+// Funcion para unir los event listeners a los elementos del DOM
 function attachEventListeners() {
+  // Event listeners para eliminar productos del carrito y actualizar el resumen
   document.querySelectorAll('.js-delete-link').forEach((link) => {
     link.addEventListener('click', (event) => {
       const productId = event.target.dataset.productId;
@@ -169,6 +177,7 @@ function attachEventListeners() {
     });
   });
 
+  // EventListener para seleccionar opciones de entrega y actualizar el resumen
   document.querySelectorAll('.js-delivery-option').forEach((element) => {
     element.addEventListener('click', (event) => {
       const { productId, deliveryOptionId } = element.dataset;
@@ -181,21 +190,15 @@ function attachEventListeners() {
   document
     .querySelector('.place-order-button')
     .addEventListener('click', () => {
-      // Limpia el localStorage
-      localStorage.clear();
-
-      // Actualiza el array de carritos a uno vacio
-      cart.length = 0;
-
-      // Actualiza y muestra la seccion de order summary
-      renderOrderSummary();
-
-      // Actualiza la parte de arriba del checkout
+    
+      localStorage.clear(); // Limpia el localStorage
+      cart.length = 0; // Actualiza el array de carritos a uno vacio
+      renderOrderSummary(); // Actualiza y muestra la seccion de order summary
       updateCheckoutHeader();
     });
 }
 
-// Funcion para actualizar la parte de arriba, el header del checkout.
+// Funcion para actualizar la parte superior del checkout con el total de elementos en el carrito
 function updateCheckoutHeader() {
   let itemCount = 0;
   if (cart && Array.isArray(cart)) {
@@ -203,13 +206,15 @@ function updateCheckoutHeader() {
       itemCount += cart[i].quantity || 0;
     }
   }
+  // Actualizamos elementos del DOM con la cantidad total de elementos en el carrito
   document.querySelector(
     '.return-to-home-link'
   ).textContent = `${itemCount} items`;
   document.querySelector('.total-item-count').textContent = `${itemCount}`;
 }
 
+// Evento que se dispara cuando el DOM ha sido completamente cargado
 document.addEventListener('DOMContentLoaded', (event) => {
-  renderOrderSummary();
-  attachEventListeners(); // Llama a la funcion aca tambien para asegurar que los event listeners esten juntos
+  renderOrderSummary(); // Renderiza el resumen del pedido al cargar la página
+  attachEventListeners(); // Adjunta los eventListeners
 });

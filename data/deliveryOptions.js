@@ -1,4 +1,4 @@
-//Opciones del delivery
+// Definicion de opciones del delivery
 export const deliveryOptions = [
   {
     id: '1',
@@ -17,6 +17,7 @@ export const deliveryOptions = [
   },
 ];
 
+// Funcion para obtener la opcion segun ID
 export function getDeliveryOption(deliveryOptionId) {
   let deliveryOption;
   deliveryOptions.forEach((option) => {

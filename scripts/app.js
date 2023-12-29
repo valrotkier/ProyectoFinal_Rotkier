@@ -1,12 +1,14 @@
-// Uso modulos con import y export para poder acceder a la variable del carrito sin generar conflictos entre archivos
+// Uso modulos con import y export principalmente para poder acceder a la variables y funciones sin generar conflictos entre archivos
 import { cart, addToCart, saveToStorage } from '../data/cart.js';
 import { fetchProducts, products } from '../data/products.js';
 import { formatCurrency } from './utils/money.js';
 
+// Variable para almacenar el HTML de los productos
 let productsHTML = '';
 
+// Llamo a la función fetchProducts que retorna una promesa para obtener los productos
 fetchProducts().then(() => {
-  //Creo una variable para que haga loop en el array de los productos
+  // Itero sobre cada producto para construir el HTML con .map
   products.map((product) => {
     productsHTML += `
   <div class="product-container">
@@ -61,22 +63,25 @@ fetchProducts().then(() => {
 </div>
   `;
   });
-  //Usamos el DOM para cargar el contenido generado
+  // Usamos el DOM para cargar el contenido generado
   document.querySelector('.js-products-grid').innerHTML = productsHTML;
-
+  // Funcion para inicializar y mostrar la cantidad del carrito
   function initializeCartQuantityDisplay() {
     let cartQuantity = 0;
     if (cart && Array.isArray(cart)) {
+      // Calculo la cantidad total de productos en el carrito
       cartQuantity = cart.reduce(
         (total, item) => total + (item.quantity || 0),
         0
       );
     }
+    // Muestro la cantidad en el DOM
     document.querySelector('.js-cart-quantity').textContent = cartQuantity;
   }
 
   initializeCartQuantityDisplay();
 
+  // Agrego eventos a los selectores de cantidad de productos
   document
     .querySelectorAll('.product-quantity-container select')
     .forEach((selectElement) => {
@@ -90,18 +95,22 @@ fetchProducts().then(() => {
         }
         const selectedQuantity = parseInt(event.target.value, 10);
 
+        // Actualizo la cantidad en el carrito
         updateCartQuantity(productId, selectedQuantity);
       });
     });
 
+  // Función para actualizar la cantidad en el carrito
   function updateCartQuantity(productId, quantity) {
     const numericProductId = parseInt(productId, 10);
-
+    // Busco el producto en el carrito
     let cartItem = cart.find((item) => item.productId === numericProductId);
 
     if (cartItem) {
+      // Si el producto existe en el carrito, actualizo la cantidad
       cartItem.quantity = quantity;
     } else {
+      // Si el producto no existe en el carrito, con push lo agrega
       cart.push({
         productId: numericProductId,
         quantity,
@@ -110,9 +119,10 @@ fetchProducts().then(() => {
     }
 
     saveToStorage(); // Actualiza el carrito en localStorage
-    initializeCartQuantityDisplay(); // Actualiza y muestra la cantidad del carrito
+    initializeCartQuantityDisplay(); // Actualiza y muestra la cantidad del carrito en el DOM
   }
 
+  // Añado eventos a los botones "Add to Cart", recorre cada botón de los productos
   document.querySelectorAll('.js-add-to-cart').forEach((button) => {
     button.addEventListener('click', () => {
       const productId = button.dataset.productId;
@@ -120,14 +130,16 @@ fetchProducts().then(() => {
         console.error('Product ID is missing or null', productId);
         return; // Previene que se agregue productos con un productId invalido
       }
+      // Obtengo la cantidad seleccionada desde el selector del producto
       const productContainer = button.closest('.product-container');
       const quantitySelect = productContainer.querySelector(
         '.product-quantity-container select'
       );
       const quantity = parseInt(quantitySelect.value, 10);
 
+      // Añado el producto al carrito
       addToCart(productId, quantity);
-      initializeCartQuantityDisplay(); // Actualiza y muestra la cantidad del carrito
+      initializeCartQuantityDisplay(); // Actualizo y muestro la cantidad del carrito
     });
   });
 });
