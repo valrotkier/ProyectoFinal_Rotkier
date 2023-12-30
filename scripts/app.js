@@ -8,7 +8,7 @@ let productsHTML = '';
 
 // Llamo a la función fetchProducts que retorna una promesa para obtener los productos
 fetchProducts().then(() => {
-  // Itero sobre cada producto para construir el HTML con .map
+  // Itero  con .map sobre cada producto para construir el HTML
   products.map((product) => {
     productsHTML += `
   <div class="product-container">

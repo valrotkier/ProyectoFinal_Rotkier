@@ -42,7 +42,7 @@ export function removeFromCart(productId) {
   saveToStorage();
 }
 
-// Función que actualiza la cantitdad de un producto en el carrito
+// Función que actualiza la cantidad de un producto en el carrito
 export function updateCartQuantity(productId, newQuantity) {
   const numericProductId = parseInt(productId, 10);
   // Busca el producto en el carrito por su ID
